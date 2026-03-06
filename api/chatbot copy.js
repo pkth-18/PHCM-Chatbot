@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     );
 
     const data = await response.json();
-    res.status(200).json({ reply: "Hello from backend!" });
+    res.status(200).json({ reply: data.output_text || "No response" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ reply: "Error connecting to AI API" });
