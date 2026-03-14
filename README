@@ -1,18 +1,18 @@
 # SHS Alma Mater AI Chatbot
 
-This project is an **AI-powered chatbot** created to assist students, visitors, and alumni of our **Senior High School alma mater**. The chatbot is designed to provide quick information about the school, such as academic programs, announcements, admission details, and frequently asked questions.
+This project is an AI-powered chatbot created to assist students, visitors, and alumni of our Senior High School alma mater. The chatbot is designed to provide quick information about the school, such as academic programs, announcements, admission details, and frequently asked questions.
 
 ## Project Purpose
 
-The goal of this project is to develop a simple **web-based chatbot** that can answer common inquiries related to the school and help users easily access important information.
+The goal of this project is to develop a simple web-based chatbot that can answer common inquiries related to the school and help users easily access important information.
 
-## System Overview
+## System Overview 
 
 The chatbot system is built using the following technologies:
 
-* **Frontend:** HTML, CSS, JavaScript (hosted on GitHub Pages)
-* **Backend:** Vercel serverless functions
-* **AI Model:** Google AI Studio (Gemini API)
+* Frontend: HTML, CSS, JavaScript (hosted on GitHub Pages)
+* Backend: Vercel serverless functions
+* AI Model: Google AI Studio (Gemini API)
 
 ## How It Works
 
@@ -27,4 +27,4 @@ This project is currently under development as part of an academic activity.
 
 ## Author
 
-Developed by a student from **Technological University of the Philippines – Manila (TUP)**.
+Developed by a student from Technological University of the Philippines – Manila (TUP).
