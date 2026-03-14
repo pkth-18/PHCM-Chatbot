@@ -1,140 +1,85 @@
-/* Perpetual Help College of Manila - AI Campus Assistant */
+const form = document.getElementById("chatForm");
+const input = document.getElementById("userInput");
+const messages = document.getElementById("messages");
+const sendBtn = document.getElementById("sendBtn");
 
-(function () {
-  "use strict";
+// enable send button
+input.addEventListener("input", () => {
+  sendBtn.disabled = input.value.trim() === "";
+});
 
-  // ===== DOM ELEMENTS =====
-  const chatForm = document.getElementById("chat-form") || document.getElementById("chatForm");
-  const userInput = document.getElementById("user-input") || document.getElementById("userInput");
-  const sendBtn = document.getElementById("send-btn") || document.getElementById("sendBtn");
-  const messagesContainer = document.getElementById("messages");
-  const chatScroll = document.getElementById("chat-scroll") || document.getElementById("chatScroll");
-  const welcomeSection = document.getElementById("welcome-section") || document.getElementById("welcomeSection");
-  const quickCards = document.querySelectorAll(".quick-card");
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-  // ===== KNOWLEDGE BASE (Fallback) =====
-  const KNOWLEDGE_BASE = {
-    greetings: {
-      intro: "It is a pleasure to welcome you to our virtual inquiry portal! ",
-      response: "I am your <b>Perpetual Help College of Manila (PHCM)</b> AI Assistant. How may I help you today?"
-    },
-    fallback: {
-      intro: "I appreciate your question. ",
-      response: "I can provide information on SHS strands, admission requirements, tuition, transferees, and uniforms. Please specify which topic you want to know more about."
-    }
-  };
+  const message = input.value.trim();
+  if (!message) return;
 
-  // ===== UTILITY FUNCTIONS =====
-  const scrollToBottom = () => {
-    chatScroll.scrollTo({
-      top: chatScroll.scrollHeight,
-      behavior: "smooth",
+  addMessage(message, "user");
+
+  input.value = "";
+  sendBtn.disabled = true;
+
+  const typing = addTyping();
+
+  try {
+
+    const res = await fetch("/api/chatbot", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message })
     });
-  };
 
-  const getTime = () => {
-    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+    const data = await res.json();
 
-  // ===== MESSAGE CREATION =====
-  const createMessage = (text, sender) => {
-    const row = document.createElement("div");
-    row.className = `message-row ${sender}`;
+    typing.remove();
 
-    const avatar = sender === "bot" 
-      ? `<div class="msg-avatar"><img src="assets/images/phcm-logo.png" alt="Bot"></div>`
-      : `<div class="msg-avatar user-av">YOU</div>`;
+    addMessage(data.reply, "bot");
 
-    row.innerHTML = `
-      ${avatar}
-      <div class="msg-content">
-        <div class="msg-bubble">${text.replace(/\n/g, '<br>')}</div>
-        <div class="msg-time">${getTime()}</div>
-      </div>
-    `;
+  } catch (error) {
 
-    messagesContainer.appendChild(row);
-    scrollToBottom();
-  };
+    typing.remove();
+    addMessage("Server error. Please try again.", "bot");
 
-  const showTypingIndicator = () => {
-    const indicator = document.createElement("div");
-    indicator.className = "typing-row";
-    indicator.id = "typing-indicator";
-    indicator.innerHTML = `
-      <div class="msg-avatar"><img src="assets/images/phcm-logo.png" alt="Bot"></div>
-      <div class="typing-bubble">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-      </div>
-    `;
-    messagesContainer.appendChild(indicator);
-    scrollToBottom();
-    return indicator;
-  };
+  }
+});
 
-  // ===== HANDLE MESSAGE SUBMISSION =====
-  const handleMessageSubmit = async (text) => {
-    const message = text || userInput.value.trim();
-    if (!message) return;
+function addMessage(text, sender) {
 
-    userInput.value = "";
-    sendBtn.disabled = true;
-    if (welcomeSection) welcomeSection.style.display = "none";
+  const row = document.createElement("div");
+  row.className = `message-row ${sender}`;
 
-    createMessage(message, "user");
+  const content = document.createElement("div");
+  content.className = "msg-content";
 
-    const indicator = showTypingIndicator();
+  const bubble = document.createElement("div");
+  bubble.className = "msg-bubble";
+  bubble.textContent = text;
 
-    try {
-      // Send message to backend API
-      const response = await fetch("/api/chatbot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message })
-      });
+  content.appendChild(bubble);
+  row.appendChild(content);
 
-      if (!response.ok) throw new Error("API error");
+  messages.appendChild(row);
 
-      const data = await response.json();
-      indicator.remove();
+  messages.scrollTop = messages.scrollHeight;
+}
 
-      // Show AI reply
-      const reply = data.reply || KNOWLEDGE_BASE.fallback.intro + KNOWLEDGE_BASE.fallback.response;
-      createMessage(reply, "bot");
+function addTyping() {
 
-    } catch (err) {
-      console.error(err);
-      indicator.remove();
-      createMessage("Sorry, something went wrong. Please try again.", "bot");
-    }
-  };
+  const row = document.createElement("div");
+  row.className = "typing-row";
 
-  // ===== EVENT LISTENERS =====
-  chatForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    handleMessageSubmit();
-  });
+  const bubble = document.createElement("div");
+  bubble.className = "typing-bubble";
+  bubble.innerHTML = `
+    <span class="typing-dot"></span>
+    <span class="typing-dot"></span>
+    <span class="typing-dot"></span>
+  `;
 
-  userInput.addEventListener("input", () => {
-    sendBtn.disabled = userInput.value.trim() === "";
-  });
+  row.appendChild(bubble);
+  messages.appendChild(row);
 
-  quickCards.forEach(card => {
-    card.addEventListener("click", () => {
-      const question = card.getAttribute("data-question");
-      handleMessageSubmit(question);
-    });
-  });
-
-  // ===== AUTO WELCOME MESSAGE =====
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      if (messagesContainer.children.length === 0) {
-        createMessage(KNOWLEDGE_BASE.greetings.intro + KNOWLEDGE_BASE.greetings.response, "bot");
-      }
-    }, 800);
-  });
-
-})();
+  return row;
+}

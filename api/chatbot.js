@@ -1,29 +1,53 @@
-// chatbot.js - Vercel API (working version with static response for testing)
-
 export default async function handler(req, res) {
-  "use strict";
 
-  // Only allow POST requests
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    // Get user message from frontend
+
     const { message } = req.body;
 
-    if (!message || message.trim() === "") {
-      return res.status(400).json({ reply: "Please provide a message." });
+    if (!message) {
+      return res.status(400).json({ reply: "Please type a message." });
     }
 
-    // ===== STATIC RESPONSE FOR TESTING =====
-    // Replace this with Gemini API call later
-    const reply = `Hello from backend! You sent: "${message}"`;
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "llama3-8b-8192",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful AI assistant for Perpetual Help College of Manila."
+          },
+          {
+            role: "user",
+            content: message
+          }
+        ]
+      })
+    });
 
-    return res.status(200).json({ reply });
+    const data = await response.json();
 
-  } catch (err) {
-    console.error("Error in API handler:", err);
-    return res.status(500).json({ reply: "Internal server error" });
+    const reply =
+      data?.choices?.[0]?.message?.content ||
+      "Sorry, I couldn't generate a response.";
+
+    res.status(200).json({ reply });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      reply: "AI service error."
+    });
+
   }
 }
